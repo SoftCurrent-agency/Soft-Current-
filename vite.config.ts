@@ -1,11 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: "/Soft-Current-/",
-  build: {
-    outDir: "dist",
-    sourcemap: false,
-  },
-});
+  base: mode === "github" ? "/Soft-Current-/" : "/",
+}));

@@ -24,7 +24,8 @@ jobs:
           node-version: 20
 
       - run: npm ci || npm install
-      - run: npm run build
+      - run: npm run build:github
+
 
       - run: cp dist/index.html dist/404.html
 

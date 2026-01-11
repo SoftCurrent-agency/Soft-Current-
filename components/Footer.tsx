@@ -17,12 +17,12 @@ const Footer: React.FC = () => {
             <div className="text-sm text-slate-500 font-medium">
               © 2025 Soft Current Agency. Tous droits réservés.
             </div>
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-white/5">
+            {/* <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-white/5">
               <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
               <span className="text-[9px] font-black text-slate-600 uppercase tracking-[0.2em]">
                 Build v1.1.0 - Ready for Deployment
               </span>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

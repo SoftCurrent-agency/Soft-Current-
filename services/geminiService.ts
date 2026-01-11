@@ -2,7 +2,8 @@
 import { GoogleGenAI } from "@google/genai";
 
 export const chatWithConsultant = async (history: { role: 'user' | 'model', parts: { text: string }[] }[], message: string): Promise<string> => {
-  const apiKey = process.env.API_KEY;
+const apiKey = import.meta.env.VITE_GEMINI_API_KEY as string | undefined;
+
 
   if (!apiKey || apiKey === "undefined" || apiKey === "") {
     console.error("ERREUR CRITIQUE : La clé API Gemini est manquante dans les variables d'environnement.");

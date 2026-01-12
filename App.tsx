@@ -20,17 +20,57 @@ import BackToTop from './components/BackToTop';
 import CustomCursor from './components/CustomCursor';
 import AIAssistant from './components/AIAssistant';
 
+type SectionId = 'home' | 'services-main' | 'offres' | 'portfolio' | 'contact';
+
 const App: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isAIOpen, setIsAIOpen] = useState(false);
   const [prefillMessage, setPrefillMessage] = useState('');
+  const [activeSection, setActiveSection] = useState<SectionId>('home');
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
+
+      // Si on est tout en haut, on force "home" (sinon le spy peut rester sur une section)
+      if (window.scrollY < 120) setActiveSection('home');
     };
-    window.addEventListener('scroll', handleScroll);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // ✅ Scroll-spy: met en actif la section visible
+  useEffect(() => {
+    const sectionIds: SectionId[] = ['services-main', 'offres', 'portfolio', 'contact'];
+
+    const elements = sectionIds
+      .map((id) => document.getElementById(id))
+      .filter(Boolean) as HTMLElement[];
+
+    if (!elements.length) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // On prend la section la plus "visible"
+        const visible = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => (b.intersectionRatio ?? 0) - (a.intersectionRatio ?? 0))[0];
+
+        if (visible?.target?.id) {
+          setActiveSection(visible.target.id as SectionId);
+        }
+      },
+      {
+        // Ajuste pour tenir compte de la navbar (hauteur ~80px)
+        root: null,
+        threshold: [0.15, 0.25, 0.35, 0.5],
+        rootMargin: '-90px 0px -55% 0px'
+      }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+    return () => observer.disconnect();
   }, []);
 
   return (
@@ -39,8 +79,10 @@ const App: React.FC = () => {
 
       <Navbar
         isScrolled={isScrolled}
-        onToggleAI={() => setIsAIOpen(v => !v)}   // ✅ toggle
-        isAIActive={isAIOpen}                    // ✅ état actif pour le style
+        onToggleAI={() => setIsAIOpen((v) => !v)}
+        isAIActive={isAIOpen}
+        activeSection={activeSection}
+        setActiveSection={setActiveSection}
       />
 
       <main>
@@ -64,10 +106,7 @@ const App: React.FC = () => {
       <Footer />
       <BackToTop />
 
-      <AIAssistant
-        isOpen={isAIOpen}
-        setIsOpen={setIsAIOpen}
-      />
+      <AIAssistant isOpen={isAIOpen} setIsOpen={setIsAIOpen} />
 
       {/* Decorative Background Elements */}
       <div className="fixed top-0 left-0 w-full h-full -z-50 pointer-events-none opacity-20">

@@ -1,6 +1,6 @@
 
 import React from 'react';
-// import { Linkedin, Twitter, ExternalLink } from 'lucide-react';
+import { Linkedin, Twitter, ExternalLink } from 'lucide-react';
 
 const members = [
   {

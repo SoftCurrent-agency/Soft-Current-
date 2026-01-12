@@ -60,16 +60,6 @@ const Navbar: React.FC<NavbarProps> = ({ isScrolled, onToggleAI }) => {
     <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
       isScrolled ? 'py-4 glass-card border-b border-white/5' : 'py-6 bg-transparent'
     }`}>
-      
-      {/* <div className="container mx-auto px-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="relative flex items-center justify-center w-11 h-11 bg-gradient-to-tr from-blue-600 to-cyan-400 rounded-xl font-bold text-xl text-white shadow-lg shadow-blue-500/20 cursor-pointer">
-            SC
-          </div>
-          <span className="text-xl font-bold font-outfit tracking-tight hidden sm:block">Soft<span className="text-blue-400">Current</span></span>
-        </div>
-         */}
-      
        <div className="container mx-auto px-6 flex items-center justify-between">
         <div 
           className="flex items-center gap-3 cursor-pointer group" 

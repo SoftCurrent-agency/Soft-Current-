@@ -1,6 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { chatWithConsultant } from '../services/geminiService';
-import { Send, Bot, Sparkles, Info, Zap, Copy, Check, Headphones, X, MessageSquare, ChevronDown, FileText, Rocket, AlertTriangle } from 'lucide-react';
+import {
+  Send,
+  Bot,
+  Sparkles,
+  Info,
+  Zap,
+  Copy,
+  Check,
+  X,
+  MessageSquare,
+  FileText,
+  Rocket,
+  AlertTriangle
+} from 'lucide-react';
 
 interface Message {
   role: 'user' | 'model';
@@ -14,7 +27,10 @@ interface AIAssistantProps {
 
 const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
   const [messages, setMessages] = useState<Message[]>([
-    { role: 'model', text: "Bienvenue chez Soft Current. Je suis votre **Agent IA**. Comment puis-je vous aider à propulser votre business aujourd'hui ?" }
+    {
+      role: 'model',
+      text: "Bienvenue chez Soft Current. Je suis votre **Agent IA**. Comment puis-je vous aider à propulser votre business aujourd'hui ?"
+    }
   ]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,10 +38,10 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const suggestions = [
-    { label: "Quels sont vos tarifs ?", icon: <Info className="w-3 h-3" /> },
-    { label: "Parlez-moi du Sprint 72h", icon: <Zap className="w-3 h-3" /> },
-    { label: "Quels services proposez-vous ?", icon: <MessageSquare className="w-3 h-3" /> },
-    { label: "Comment lancer mon projet ?", icon: <Rocket className="w-3 h-3" /> }
+    { label: 'Quels sont vos tarifs ?', icon: <Info className="w-3 h-3" /> },
+    { label: 'Parlez-moi du Sprint 72h', icon: <Zap className="w-3 h-3" /> },
+    { label: 'Quels services proposez-vous ?', icon: <MessageSquare className="w-3 h-3" /> },
+    { label: 'Comment lancer mon projet ?', icon: <Rocket className="w-3 h-3" /> }
   ];
 
   useEffect(() => {
@@ -52,21 +68,24 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
     if (!userMessage || loading) return;
 
     setInput('');
-    setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
+    setMessages((prev) => [...prev, { role: 'user', text: userMessage }]);
     setLoading(true);
 
-    const history = messages.map(m => ({
+    const history = messages.map((m) => ({
       role: m.role,
       parts: [{ text: m.text }]
     }));
 
     try {
       const response = await chatWithConsultant(history, userMessage);
-      setMessages(prev => [...prev, { role: 'model', text: response }]);
+      setMessages((prev) => [...prev, { role: 'model', text: response }]);
     } catch (err) {
-      setMessages(prev => [
+      setMessages((prev) => [
         ...prev,
-        { role: 'model', text: "Désolé, une erreur technique est survenue. Contactez-nous à **softcurrentagency@gmail.com**." }
+        {
+          role: 'model',
+          text: "Désolé, une erreur technique est survenue. Contactez-nous à **softcurrentagency@gmail.com**."
+        }
       ]);
     } finally {
       setLoading(false);
@@ -95,25 +114,28 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
 
   const shouldShowCTA = (text: string) => {
     const keywords = ['formulaire', 'brief', 'contact', 'devis', 'cliquer', 'ci-dessous'];
-    return keywords.some(key => text.toLowerCase().includes(key));
+    return keywords.some((key) => text.toLowerCase().includes(key));
   };
 
   const isConfigError = (text: string) => {
-    return text.includes("système n'est pas encore configuré") || text.includes("clé d'accès semble invalide");
+    return (
+      text.includes("système n'est pas encore configuré") ||
+      text.includes("clé d'accès semble invalide")
+    );
   };
 
   return (
     <>
       {/* ✅ Floating Action Button (ROBOT BLEU) */}
       <div
-        className={`fixed bottom-6 left-6 z-[70] transition-all duration-500 transform ${
+        className={`fixed bottom-6 left-6 z-[999] transition-all duration-500 transform ${
           isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
         }`}
       >
         <button
           onClick={() => setIsOpen(true)}
-          className="group relative flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-blue-600 text-white shadow-2xl shadow-blue-500/40 hover:bg-blue-500 hover:scale-110 active:scale-95 transition-all cursor-pointer overflow-hidden"
           type="button"
+          className="group relative flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-blue-600 text-white shadow-2xl shadow-blue-500/60 hover:bg-blue-500 hover:shadow-blue-500/80 hover:scale-110 active:scale-95 transition-all cursor-pointer overflow-hidden ring-1 ring-blue-400/30"
         >
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
           <Bot className="w-7 h-7 md:w-8 md:h-8 relative z-10" />
@@ -137,13 +159,18 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-white uppercase tracking-tight leading-none mb-1">Agent IA Expert</h3>
+              <h3 className="text-sm font-black text-white uppercase tracking-tight leading-none mb-1">
+                Agent IA Expert
+              </h3>
               <div className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 bg-green-400 rounded-full animate-pulse" />
-                <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest">En ligne</span>
+                <span className="text-[10px] font-bold text-white/70 uppercase tracking-widest">
+                  En ligne
+                </span>
               </div>
             </div>
           </div>
+
           <button
             onClick={() => setIsOpen(false)}
             className="p-3 hover:bg-black/20 rounded-full text-white transition-all cursor-pointer group"
@@ -162,7 +189,9 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
           {messages.map((m, idx) => (
             <div
               key={idx}
-              className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+              className={`flex flex-col ${
+                m.role === 'user' ? 'items-end' : 'items-start'
+              } animate-in fade-in slide-in-from-bottom-2 duration-300`}
             >
               <div
                 className={`p-4 md:p-5 rounded-2xl text-[13px] md:text-[14px] leading-relaxed max-w-[90%] relative group ${
@@ -173,7 +202,9 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
                       : 'bg-slate-900 border border-white/5 text-slate-300 rounded-tl-none'
                 }`}
               >
-                {isConfigError(m.text) && <AlertTriangle className="w-4 h-4 mb-2 text-red-500" />}
+                {isConfigError(m.text) && (
+                  <AlertTriangle className="w-4 h-4 mb-2 text-red-500" />
+                )}
                 {formatText(m.text)}
 
                 {m.role === 'model' && (
@@ -255,6 +286,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
 };
 
 export default AIAssistant;
+
 
 
 // import React, { useState, useRef, useEffect } from 'react';

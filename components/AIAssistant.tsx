@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { chatWithConsultant } from '../services/geminiService';
-import { Send, Bot, Sparkles, Info, Zap, Copy, Check, Headphones, X, MessageSquare, ChevronDown, FileText, Rocket, AlertTriangle } from 'lucide-react';
+import { Send, Bot, Sparkles, Info, Zap, Copy, Check, X, MessageSquare, FileText, Rocket, AlertTriangle } from 'lucide-react';
 
 interface Message {
   role: 'user' | 'model';
@@ -48,7 +48,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
 
   const handleSubmit = async (e: React.FormEvent | string) => {
     if (typeof e !== 'string') e.preventDefault();
-    
+
     const userMessage = typeof e === 'string' ? e : input.trim();
     if (!userMessage || loading) return;
 
@@ -99,10 +99,15 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
   return (
     <>
       {/* Floating Action Button */}
-      <div className={`fixed bottom-6 left-6 z-[70] transition-all duration-500 transform ${isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}>
+      {/* ✅ CHANGEMENT: on ne cache plus le bouton quand isOpen=true, sinon on ne peut pas le voir devenir bleu */}
+      <div className="fixed bottom-6 left-6 z-[90] transition-all duration-500 transform">
         <button
-          onClick={() => setIsOpen(true)}
-          className="group relative flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-blue-600 text-white shadow-2xl shadow-blue-500/40 hover:bg-blue-500 hover:scale-110 active:scale-95 transition-all cursor-pointer overflow-hidden"
+          onClick={() => !isOpen && setIsOpen(true)}
+          className={`group relative flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-2xl border transition-all cursor-pointer overflow-hidden
+            ${isOpen
+              ? 'bg-blue-600 border-blue-600 text-white shadow-2xl shadow-blue-500/40'
+              : 'bg-transparent border-white/15 text-white hover:border-blue-500/60 hover:scale-110 active:scale-95'
+            }`}
         >
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
           <Bot className="w-7 h-7 md:w-8 md:h-8 relative z-10" />
@@ -117,7 +122,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
       <div className={`fixed bottom-6 left-6 z-[80] w-[92vw] md:w-[420px] h-[650px] max-h-[85vh] flex flex-col glass-card rounded-[2.5rem] border-blue-500/30 shadow-[0_30px_90px_rgba(0,0,0,0.7)] overflow-hidden transition-all duration-500 origin-bottom-left ${
         isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-75 opacity-0 translate-y-12 pointer-events-none'
       }`}>
-        
+
         {/* Header */}
         <div className="p-5 bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-between shrink-0 shadow-lg">
           <div className="flex items-center gap-3">
@@ -132,39 +137,41 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
               </div>
             </div>
           </div>
-          <button 
+          <button
             onClick={() => setIsOpen(false)}
             className="p-3 hover:bg-black/20 rounded-full text-white transition-all cursor-pointer group"
             aria-label="Fermer le chat"
+            type="button"
           >
             <X className="w-5 h-5 group-hover:rotate-90 transition-transform" />
           </button>
         </div>
 
         {/* Chat Area */}
-        <div 
+        <div
           ref={scrollRef}
           className="flex-1 overflow-y-auto p-5 md:p-8 space-y-6 scrollbar-hide bg-slate-950/95"
         >
           {messages.map((m, idx) => (
-            <div 
-              key={idx} 
+            <div
+              key={idx}
               className={`flex flex-col ${m.role === 'user' ? 'items-end' : 'items-start'} animate-in fade-in slide-in-from-bottom-2 duration-300`}
             >
               <div className={`p-4 md:p-5 rounded-2xl text-[13px] md:text-[14px] leading-relaxed max-w-[90%] relative group ${
-                m.role === 'user' 
-                  ? 'bg-blue-600 text-white rounded-tr-none shadow-lg' 
+                m.role === 'user'
+                  ? 'bg-blue-600 text-white rounded-tr-none shadow-lg'
                   : isConfigError(m.text)
                     ? 'bg-red-500/10 border border-red-500/30 text-red-200 rounded-tl-none'
                     : 'bg-slate-900 border border-white/5 text-slate-300 rounded-tl-none'
               }`}>
                 {isConfigError(m.text) && <AlertTriangle className="w-4 h-4 mb-2 text-red-500" />}
                 {formatText(m.text)}
-                
+
                 {m.role === 'model' && (
-                  <button 
+                  <button
                     onClick={() => copyToClipboard(m.text, idx)}
                     className="absolute -right-8 top-1 opacity-0 group-hover:opacity-100 transition-opacity p-1 text-slate-600 hover:text-white cursor-pointer"
+                    type="button"
                   >
                     {copiedId === idx ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
                   </button>
@@ -172,9 +179,10 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
               </div>
 
               {m.role === 'model' && shouldShowCTA(m.text) && (
-                <button 
+                <button
                   onClick={scrollToContact}
                   className="mt-4 flex items-center gap-2 px-6 py-3 bg-blue-500/10 border border-blue-500/20 rounded-xl text-[11px] font-black text-blue-400 uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all animate-bounce-subtle cursor-pointer shadow-lg"
+                  type="button"
                 >
                   <FileText className="w-4 h-4" />
                   Remplir le brief maintenant
@@ -182,6 +190,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
               )}
             </div>
           ))}
+
           {loading && (
             <div className="flex justify-start">
               <div className="bg-slate-900 border border-white/5 p-4 rounded-2xl rounded-tl-none">
@@ -198,17 +207,18 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
         {/* Input Area */}
         <div className="p-5 md:p-6 bg-slate-900/90 border-t border-white/5 shrink-0">
           <div className="mb-4 flex gap-2 overflow-x-auto scrollbar-hide pb-1">
-             {suggestions.map((s, i) => (
-               <button 
-                key={i} 
+            {suggestions.map((s, i) => (
+              <button
+                key={i}
                 onClick={() => handleSubmit(s.label)}
                 className="shrink-0 flex items-center gap-2 text-[10px] font-bold text-slate-400 bg-slate-950 border border-slate-800 py-2.5 px-4 rounded-full hover:border-blue-500 hover:text-white transition-all cursor-pointer whitespace-nowrap"
-               >
-                 {s.icon} {s.label}
-               </button>
-             ))}
+                type="button"
+              >
+                {s.icon} {s.label}
+              </button>
+            ))}
           </div>
-          
+
           <form onSubmit={handleSubmit} className="relative">
             <input
               type="text"

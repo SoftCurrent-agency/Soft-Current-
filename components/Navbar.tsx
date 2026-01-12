@@ -44,11 +44,13 @@ const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
+  // ✅ MODIF ICI: état "inactif" devient bleu (texte/bordure),
+  // et l'état "actif" garde le bleu plein.
   const navBtnClass = (isActive: boolean) =>
     `px-4 py-2 rounded-full border transition-all font-bold cursor-pointer inline-flex items-center gap-2
      ${isActive
        ? 'bg-blue-600 border-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.35)]'
-       : 'bg-transparent border-slate-300/30 text-slate-600 dark:text-slate-300 hover:border-blue-500/50 hover:text-blue-500 dark:hover:text-white'
+       : 'bg-transparent border-blue-500/40 text-blue-500 hover:border-blue-500 hover:text-blue-400 dark:text-blue-400 dark:hover:text-white'
      }`;
 
   const handleLogoClick = () => {
@@ -71,7 +73,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: SectionId) => {
     e.preventDefault();
-    setActiveSection(id); // ✅ devient bleu immédiatement au clic
+    setActiveSection(id);
     const element = document.getElementById(id);
     if (element) {
       window.scrollTo({
@@ -176,6 +178,7 @@ const Navbar: React.FC<NavbarProps> = ({
 };
 
 export default Navbar;
+
 
 
 // import React, { useState, useEffect } from 'react';

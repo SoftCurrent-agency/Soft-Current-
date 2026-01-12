@@ -1,13 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Sun, Moon, Sparkles } from 'lucide-react';
 
+type SectionId = 'home' | 'services-main' | 'offres' | 'portfolio' | 'contact';
+
 interface NavbarProps {
   isScrolled: boolean;
   onToggleAI: () => void;
-  isAIActive: boolean; // ✅ AJOUT
+  isAIActive: boolean;
+  activeSection: SectionId;
+  setActiveSection: (id: SectionId) => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ isScrolled, onToggleAI, isAIActive }) => {
+const Navbar: React.FC<NavbarProps> = ({
+  isScrolled,
+  onToggleAI,
+  isAIActive,
+  activeSection,
+  setActiveSection
+}) => {
   const [isDark, setIsDark] = useState(true);
 
   useEffect(() => {
@@ -24,6 +34,7 @@ const Navbar: React.FC<NavbarProps> = ({ isScrolled, onToggleAI, isAIActive }) =
   const toggleTheme = () => {
     const newTheme = !isDark;
     setIsDark(newTheme);
+
     if (newTheme) {
       document.documentElement.classList.add('dark');
       localStorage.setItem('theme', 'dark');
@@ -33,15 +44,22 @@ const Navbar: React.FC<NavbarProps> = ({ isScrolled, onToggleAI, isAIActive }) =
     }
   };
 
+  const navBtnClass = (isActive: boolean) =>
+    `px-4 py-2 rounded-full border transition-all font-bold cursor-pointer inline-flex items-center gap-2
+     ${isActive
+       ? 'bg-blue-600 border-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.35)]'
+       : 'bg-transparent border-slate-300/30 text-slate-600 dark:text-slate-300 hover:border-blue-500/50 hover:text-blue-500 dark:hover:text-white'
+     }`;
+
   const handleLogoClick = () => {
+    setActiveSection('home');
     window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (window.location.hash) {
-      history.replaceState(null, '', window.location.pathname);
-    }
+    if (window.location.hash) history.replaceState(null, '', window.location.pathname);
   };
 
   const handleStartProject = (e: React.MouseEvent) => {
     e.preventDefault();
+    setActiveSection('contact');
     const contactSection = document.getElementById('contact');
     if (contactSection) {
       window.scrollTo({
@@ -51,8 +69,9 @@ const Navbar: React.FC<NavbarProps> = ({ isScrolled, onToggleAI, isAIActive }) =
     }
   };
 
-  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: SectionId) => {
     e.preventDefault();
+    setActiveSection(id); // ✅ devient bleu immédiatement au clic
     const element = document.getElementById(id);
     if (element) {
       window.scrollTo({
@@ -63,9 +82,11 @@ const Navbar: React.FC<NavbarProps> = ({ isScrolled, onToggleAI, isAIActive }) =
   };
 
   return (
-    <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-      isScrolled ? 'py-4 glass-card border-b border-white/5' : 'py-6 bg-transparent'
-    }`}>
+    <nav
+      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
+        isScrolled ? 'py-4 glass-card border-b border-white/5' : 'py-6 bg-transparent'
+      }`}
+    >
       <div className="container mx-auto px-6 flex items-center justify-between">
         <div
           className="flex items-center gap-3 cursor-pointer group"
@@ -88,26 +109,47 @@ const Navbar: React.FC<NavbarProps> = ({ isScrolled, onToggleAI, isAIActive }) =
           </span>
         </div>
 
-        <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600 dark:text-slate-300">
-          <a href="#services-main" onClick={(e) => scrollToSection(e, 'services-main')} className="hover:text-blue-600 dark:hover:text-white transition-colors">Services</a>
-          <a href="#offres" onClick={(e) => scrollToSection(e, 'offres')} className="hover:text-blue-600 dark:hover:text-white transition-colors">Tarifs</a>
-          <a href="#portfolio" onClick={(e) => scrollToSection(e, 'portfolio')} className="hover:text-blue-600 dark:hover:text-white transition-colors">Projets</a>
+        <div className="hidden md:flex items-center gap-3 text-sm">
+          <a
+            href="#services-main"
+            onClick={(e) => scrollToSection(e, 'services-main')}
+            className={navBtnClass(activeSection === 'services-main')}
+          >
+            Services
+          </a>
 
-          {/* ✅ BOUTON AGENT IA: transparent -> bleu si actif */}
+          <a
+            href="#offres"
+            onClick={(e) => scrollToSection(e, 'offres')}
+            className={navBtnClass(activeSection === 'offres')}
+          >
+            Tarifs
+          </a>
+
+          <a
+            href="#portfolio"
+            onClick={(e) => scrollToSection(e, 'portfolio')}
+            className={navBtnClass(activeSection === 'portfolio')}
+          >
+            Projets
+          </a>
+
           <button
             onClick={onToggleAI}
             type="button"
-            className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all font-bold cursor-pointer
-              ${isAIActive
-                ? 'bg-blue-600 border-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.35)]'
-                : 'bg-transparent border-slate-300/30 text-slate-600 dark:text-slate-300 hover:border-blue-500/50 hover:text-blue-500 dark:hover:text-white'
-              }`}
+            className={navBtnClass(isAIActive)}
           >
             <Sparkles className="w-4 h-4" />
             Agent IA
           </button>
 
-          <a href="#contact" onClick={(e) => scrollToSection(e, 'contact')} className="hover:text-blue-600 dark:hover:text-white transition-colors">Contact</a>
+          <a
+            href="#contact"
+            onClick={(e) => scrollToSection(e, 'contact')}
+            className={navBtnClass(activeSection === 'contact')}
+          >
+            Contact
+          </a>
         </div>
 
         <div className="flex items-center gap-4">
@@ -134,6 +176,7 @@ const Navbar: React.FC<NavbarProps> = ({ isScrolled, onToggleAI, isAIActive }) =
 };
 
 export default Navbar;
+
 
 // import React, { useState, useEffect } from 'react';
 // import { Sun, Moon, Sparkles } from 'lucide-react';

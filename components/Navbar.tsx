@@ -1,67 +1,41 @@
-import React, { useState, useEffect } from 'react';
-import { Sun, Moon, Sparkles } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { chatWithConsultant } from '../services/geminiService';
+import { Send, Bot, Sparkles, Info, Zap, Copy, Check, Headphones, X, MessageSquare, ChevronDown, FileText, Rocket, AlertTriangle } from 'lucide-react';
 
-type SectionId = 'home' | 'services-main' | 'offres' | 'portfolio' | 'contact';
-
-interface NavbarProps {
-  isScrolled: boolean;
-  onToggleAI: () => void;
-  isAIActive: boolean;
-  activeSection: SectionId;
-  setActiveSection: (id: SectionId) => void;
+interface Message {
+  role: 'user' | 'model';
+  text: string;
 }
 
-const Navbar: React.FC<NavbarProps> = ({
-  isScrolled,
-  onToggleAI,
-  isAIActive,
-  activeSection,
-  setActiveSection
-}) => {
-  const [isDark, setIsDark] = useState(true);
+interface AIAssistantProps {
+  isOpen: boolean;
+  setIsOpen: (open: boolean) => void;
+}
+
+const AIAssistant: React.FC<AIAssistantProps> = ({ isOpen, setIsOpen }) => {
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'model', text: "Bienvenue chez Soft Current. Je suis votre **Agent IA**. Comment puis-je vous aider à propulser votre business aujourd'hui ?" }
+  ]);
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [copiedId, setCopiedId] = useState<number | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  const suggestions = [
+    { label: "Quels sont vos tarifs ?", icon: <Info className="w-3 h-3" /> },
+    { label: "Parlez-moi du Sprint 72h", icon: <Zap className="w-3 h-3" /> },
+    { label: "Quels services proposez-vous ?", icon: <MessageSquare className="w-3 h-3" /> },
+    { label: "Comment lancer mon projet ?", icon: <Rocket className="w-3 h-3" /> }
+  ];
 
   useEffect(() => {
-    const theme = localStorage.getItem('theme');
-    if (theme === 'light') {
-      setIsDark(false);
-      document.documentElement.classList.remove('dark');
-    } else {
-      setIsDark(true);
-      document.documentElement.classList.add('dark');
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, []);
+  }, [messages, loading, isOpen]);
 
-  const toggleTheme = () => {
-    const newTheme = !isDark;
-    setIsDark(newTheme);
-
-    if (newTheme) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
-
-  // ✅ MODIF ICI: état "inactif" devient bleu (texte/bordure),
-  // et l'état "actif" garde le bleu plein.
-  const navBtnClass = (isActive: boolean) =>
-    `px-4 py-2 rounded-full border transition-all font-bold cursor-pointer inline-flex items-center gap-2
-     ${isActive
-       ? 'bg-blue-600 border-blue-600 text-white shadow-[0_0_20px_rgba(37,99,235,0.35)]'
-       : 'bg-transparent border-blue-500/40 text-blue-500 hover:border-blue-500 hover:text-blue-400 dark:text-blue-400 dark:hover:text-white'
-     }`;
-
-  const handleLogoClick = () => {
-    setActiveSection('home');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    if (window.location.hash) history.replaceState(null, '', window.location.pathname);
-  };
-
-  const handleStartProject = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setActiveSection('contact');
+  const scrollToContact = () => {
+    setIsOpen(false);
     const contactSection = document.getElementById('contact');
     if (contactSection) {
       window.scrollTo({
@@ -71,113 +45,100 @@ const Navbar: React.FC<NavbarProps> = ({
     }
   };
 
-  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: SectionId) => {
-    e.preventDefault();
-    setActiveSection(id);
-    const element = document.getElementById(id);
-    if (element) {
-      window.scrollTo({
-        top: element.offsetTop - 80,
-        behavior: 'smooth'
-      });
+  const handleSubmit = async (e: React.FormEvent | string) => {
+    if (typeof e !== 'string') e.preventDefault();
+
+    const userMessage = typeof e === 'string' ? e : input.trim();
+    if (!userMessage || loading) return;
+
+    setInput('');
+    setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
+    setLoading(true);
+
+    const history = messages.map(m => ({
+      role: m.role,
+      parts: [{ text: m.text }]
+    }));
+
+    try {
+      const response = await chatWithConsultant(history, userMessage);
+      setMessages(prev => [...prev, { role: 'model', text: response }]);
+    } catch (err) {
+      setMessages(prev => [
+        ...prev,
+        { role: 'model', text: "Désolé, une erreur technique est survenue. Contactez-nous à **softcurrentagency@gmail.com**." }
+      ]);
+    } finally {
+      setLoading(false);
     }
   };
 
+  const copyToClipboard = (text: string, id: number) => {
+    navigator.clipboard.writeText(text.replace(/\*\*/g, ''));
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const formatText = (text: string) => {
+    const parts = text.split(/(\*\*.*?\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return (
+          <strong key={i} className="text-white font-black">
+            {part.slice(2, -2)}
+          </strong>
+        );
+      }
+      return part;
+    });
+  };
+
+  const shouldShowCTA = (text: string) => {
+    const keywords = ['formulaire', 'brief', 'contact', 'devis', 'cliquer', 'ci-dessous'];
+    return keywords.some(key => text.toLowerCase().includes(key));
+  };
+
+  const isConfigError = (text: string) => {
+    return text.includes("système n'est pas encore configuré") || text.includes("clé d'accès semble invalide");
+  };
+
   return (
-    <nav
-      className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${
-        isScrolled ? 'py-4 glass-card border-b border-white/5' : 'py-6 bg-transparent'
-      }`}
-    >
-      <div className="container mx-auto px-6 flex items-center justify-between">
-        <div
-          className="flex items-center gap-3 cursor-pointer group"
-          onClick={handleLogoClick}
-          title="Retour à l'accueil"
-          role="button"
-          tabIndex={0}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') handleLogoClick();
-          }}
+    <>
+      {/* ✅ Floating Action Button (ROBOT BLEU) */}
+      <div
+        className={`fixed bottom-6 left-6 z-[70] transition-all duration-500 transform ${
+          isOpen ? 'scale-0 opacity-0 pointer-events-none' : 'scale-100 opacity-100'
+        }`}
+      >
+        <button
+          onClick={() => setIsOpen(true)}
+          className="group relative flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-2xl bg-blue-600 text-white shadow-2xl shadow-blue-500/40 hover:bg-blue-500 hover:scale-110 active:scale-95 transition-all cursor-pointer overflow-hidden"
+          type="button"
         >
-          <div className="relative flex items-center justify-center w-11 h-11 bg-gradient-to-tr from-blue-600 to-cyan-400 rounded-xl font-bold text-xl text-white shadow-lg shadow-blue-500/20 transition-transform group-hover:scale-110 group-active:scale-95">
-            SC
-          </div>
-          <span className="text-xl font-bold font-outfit tracking-tight hidden sm:block transition-colors group-hover:text-blue-500 dark:group-hover:text-blue-400">
-            Soft
-            <span className="text-blue-400 group-hover:text-blue-600 dark:group-hover:text-white transition-colors">
-              Current
-            </span>
+          <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+          <Bot className="w-7 h-7 md:w-8 md:h-8 relative z-10" />
+          <span className="absolute -top-1 -right-1 flex h-4 w-4">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-3 w-3 md:h-4 md:w-4 bg-green-500 border-2 border-blue-600"></span>
           </span>
-        </div>
-
-        <div className="hidden md:flex items-center gap-3 text-sm">
-          <a
-            href="#services-main"
-            onClick={(e) => scrollToSection(e, 'services-main')}
-            className={navBtnClass(activeSection === 'services-main')}
-          >
-            Services
-          </a>
-
-          <a
-            href="#offres"
-            onClick={(e) => scrollToSection(e, 'offres')}
-            className={navBtnClass(activeSection === 'offres')}
-          >
-            Tarifs
-          </a>
-
-          <a
-            href="#portfolio"
-            onClick={(e) => scrollToSection(e, 'portfolio')}
-            className={navBtnClass(activeSection === 'portfolio')}
-          >
-            Projets
-          </a>
-
-          <button
-            onClick={onToggleAI}
-            type="button"
-            className={navBtnClass(isAIActive)}
-          >
-            <Sparkles className="w-4 h-4" />
-            Agent IA
-          </button>
-
-          <a
-            href="#contact"
-            onClick={(e) => scrollToSection(e, 'contact')}
-            className={navBtnClass(activeSection === 'contact')}
-          >
-            Contact
-          </a>
-        </div>
-
-        <div className="flex items-center gap-4">
-          <button
-            onClick={toggleTheme}
-            className="p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-900 transition-all active:scale-90 cursor-pointer"
-            aria-label="Toggle Theme"
-            type="button"
-          >
-            {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
-
-          <button
-            onClick={handleStartProject}
-            className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 active:scale-95 text-white text-sm font-semibold rounded-full transition-all hover:shadow-[0_0_20px_rgba(37,99,235,0.4)] cursor-pointer"
-            type="button"
-          >
-            Démarrer un projet
-          </button>
-        </div>
+        </button>
       </div>
-    </nav>
-  );
-};
 
-export default Navbar;
+      {/* Chat Window Widget */}
+      <div
+        className={`fixed bottom-6 left-6 z-[80] w-[92vw] md:w-[420px] h-[650px] max-h-[85vh] flex flex-col glass-card rounded-[2.5rem] border-blue-500/30 shadow-[0_30px_90px_rgba(0,0,0,0.7)] overflow-hidden transition-all duration-500 origin-bottom-left ${
+          isOpen ? 'scale-100 opacity-100 translate-y-0' : 'scale-75 opacity-0 translate-y-12 pointer-events-none'
+        }`}
+      >
+        {/* Header */}
+        <div className="p-5 bg-gradient-to-r from-blue-600 to-cyan-500 flex items-center justify-between shrink-0 shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-md flex items-center justify-center text-white">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-white uppercase tracking-tight leading-none mb-1">Agent IA Expert</h3
+
 
 
 
